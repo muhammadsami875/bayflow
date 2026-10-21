@@ -6,11 +6,13 @@
  * Run: npm run db:seed   (wipes existing data first)
  */
 import { PrismaClient, type ShopRole } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { applyDatabaseEnv } from "../src/server/db-url";
+import { hashPassword } from "../src/server/password";
 import { createBooking } from "../src/server/bookings/create";
 import { performAction, type Actor } from "../src/server/bookings/actions";
 import { weekdayOf } from "../src/server/slots";
 
+applyDatabaseEnv();
 const db = new PrismaClient();
 const DEMO_PASSWORD = "Demo@1234";
 
@@ -137,9 +139,17 @@ function nextWorkingDate(workingDays: number[], offsetMinutes: number, skip = 1)
 }
 
 async function main() {
-  console.log("Wiping existing data...");
-  await wipe();
-  const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
+  // `--if-empty` is used by the Vercel build: seed a fresh database once, never touch real data.
+  if (process.argv.includes("--if-empty")) {
+    if ((await db.user.count()) > 0) {
+      console.log("Database already has data. Skipping seed.");
+      return;
+    }
+  } else {
+    console.log("Wiping existing data...");
+    await wipe();
+  }
+  const passwordHash = await hashPassword(DEMO_PASSWORD);
 
   const owners: Record<string, string> = {};
   for (const [key, o] of Object.entries(OWNERS)) {

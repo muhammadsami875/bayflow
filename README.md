@@ -73,10 +73,9 @@ Rejected-estimate path: reject as the customer, then as the advisor choose "Revi
 
 ## Deployment (Vercel + Neon)
 
-1. Create a Neon project. Copy the **pooled** string into `DATABASE_URL` (append `&pgbouncer=true`) and the **direct** string into `DIRECT_URL`.
-2. Run migrations and seed once from your machine against that database: `npm run db:deploy && npm run db:seed`.
-3. Import the repo in Vercel and set `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `NEXT_PUBLIC_APP_URL`.
-4. Deploy. The build runs `prisma generate && next build`; no database access is needed at build time.
+1. Create a hosted Postgres database (Neon or Supabase) and connect it to the Vercel project. The app accepts either `DATABASE_URL` / `DIRECT_URL`, or the names the integrations create (`POSTGRES_PRISMA_URL` / `POSTGRES_URL_NON_POOLING`); see `src/server/db-url.ts`.
+2. In Vercel set `JWT_SECRET` and `NEXT_PUBLIC_APP_URL`.
+3. Deploy. `vercel.json` runs `npm run build:vercel`, which applies migrations, seeds the demo data only when the database is empty, then builds the app. Existing data is never wiped.
 
 ## Architecture
 

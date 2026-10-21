@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+import { hashPassword, verifyPassword } from "./password";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import type { UserType } from "@prisma/client";
@@ -16,8 +16,7 @@ function secret() {
   return new TextEncoder().encode(s);
 }
 
-export const hashPassword = (pw: string) => bcrypt.hash(pw, 10);
-export const verifyPassword = (pw: string, hash: string) => bcrypt.compare(pw, hash);
+export { hashPassword, verifyPassword };
 
 export async function startSession(userId: string, type: UserType) {
   const token = await new SignJWT({ type })

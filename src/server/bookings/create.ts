@@ -1,7 +1,8 @@
 import { randomInt } from "node:crypto";
 import { db } from "../db";
 import { badRequest, conflict, notFound, unauthorized } from "../errors";
-import { hashPassword, verifyPassword, type SessionUser } from "../auth";
+import { hashPassword, verifyPassword } from "../password";
+import type { SessionUser } from "../auth";
 import { notifyShopRole } from "../notify";
 import { reserveSlot } from "../slots";
 import type { z } from "zod";

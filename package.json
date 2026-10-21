@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
+    "build:vercel": "tsx scripts/vercel-build.ts",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
