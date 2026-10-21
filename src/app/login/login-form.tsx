@@ -14,7 +14,7 @@ const DEMO: { group: string; accounts: [label: string, email: string][] }[] = [
   {
     group: "Lahore Auto Care",
     accounts: [
-      ["Owner (all 3 shops)", "fatima@bayflow.test"],
+      ["Owner Sami (2 shops)", "sami@bayflow.test"],
       ["Service Advisor", "bilal.sa@bayflow.test"],
       ["Technician", "imran.tech@bayflow.test"],
       ["QC Inspector", "sara.qc@bayflow.test"],
@@ -22,7 +22,13 @@ const DEMO: { group: string; accounts: [label: string, email: string][] }[] = [
     ],
   },
   { group: "Customers", accounts: [["Ahmed (estimate waiting)", "ahmed@mail.com"], ["Sana", "sana@mail.com"]] },
-  { group: "Other owner (isolation test)", accounts: [["Omar, Peshawar Quick Fix", "omar@bayflow.test"]] },
+  {
+    group: "Other owners (isolation test)",
+    accounts: [
+      ["Huraira, Islamabad Garage Pro", "huraira@bayflow.test"],
+      ["Hassan, Peshawar Quick Fix", "hassan@bayflow.test"],
+    ],
+  },
 ];
 
 export function LoginForm() {

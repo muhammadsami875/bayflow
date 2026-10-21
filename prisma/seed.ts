@@ -54,9 +54,11 @@ interface ShopSeed {
   team: Record<ShopRole, [name: string, email: string]>;
 }
 
+// Sami owns two shops (multi-shop owner demo); Huraira and Hassan own one each.
 const OWNERS = {
-  fatima: { name: "Fatima Raza", email: "fatima@bayflow.test" },
-  omar: { name: "Omar Khan", email: "omar@bayflow.test" },
+  sami: { name: "Muhammad Sami", email: "sami@bayflow.test" },
+  huraira: { name: "Huraira", email: "huraira@bayflow.test" },
+  hassan: { name: "Hassan", email: "hassan@bayflow.test" },
 };
 
 // Usman is Parts Person in Lahore and QC Inspector in Karachi: roles are per shop.
@@ -69,7 +71,7 @@ const SHOPS: ShopSeed[] = [
     address: "45 Main Boulevard, Gulberg III",
     phone: "+92 42 3578 1100",
     description: "Family-run garage for Japanese and Korean cars. Honest estimates, no surprises.",
-    owner: "fatima",
+    owner: "sami",
     team: {
       SERVICE_ADVISOR: ["Bilal Ahmed", "bilal.sa@bayflow.test"],
       TECHNICIAN: ["Imran Shah", "imran.tech@bayflow.test"],
@@ -83,7 +85,7 @@ const SHOPS: ShopSeed[] = [
     address: "12 Shahrah-e-Faisal, PECHS",
     phone: "+92 21 3454 2200",
     description: "Full-service workshop with a dedicated quality-control bay.",
-    owner: "fatima",
+    owner: "sami",
     team: {
       SERVICE_ADVISOR: ["Hina Qureshi", "hina.sa@bayflow.test"],
       TECHNICIAN: ["Faisal Memon", "faisal.tech@bayflow.test"],
@@ -97,7 +99,7 @@ const SHOPS: ShopSeed[] = [
     address: "Plot 8, I-9 Industrial Area",
     phone: "+92 51 4440 3300",
     description: "Specialists in diagnostics, brakes and AC for daily drivers.",
-    owner: "fatima",
+    owner: "huraira",
     team: {
       SERVICE_ADVISOR: ["Ayesha Noor", "ayesha.sa@bayflow.test"],
       TECHNICIAN: ["Kamran Butt", "kamran.tech@bayflow.test"],
@@ -111,7 +113,7 @@ const SHOPS: ShopSeed[] = [
     address: "Ring Road, near University Town",
     phone: "+92 91 5700 4400",
     description: "Fast turnaround servicing. Independent owner, separate team (tenant isolation demo).",
-    owner: "omar",
+    owner: "hassan",
     team: {
       SERVICE_ADVISOR: ["Noman Yousaf", "noman.sa@bayflow.test"],
       TECHNICIAN: ["Salman Gul", "salman.tech@bayflow.test"],

@@ -49,14 +49,15 @@ Seeded by `npm run db:seed`. Every account uses the password **`Demo@1234`**. Th
 
 | Role | Email | Shop |
 | --- | --- | --- |
-| Owner (3 shops) | fatima@bayflow.test | Lahore, Karachi, Islamabad |
+| Owner (2 shops) | sami@bayflow.test | Lahore, Karachi (shop switcher demo) |
+| Owner | huraira@bayflow.test | Islamabad Garage Pro |
 | Service Advisor | bilal.sa@bayflow.test | Lahore Auto Care |
 | Technician | imran.tech@bayflow.test | Lahore Auto Care |
 | QC Inspector | sara.qc@bayflow.test | Lahore Auto Care |
 | Parts Person | usman.parts@bayflow.test | Lahore Auto Care (also QC Inspector in Karachi) |
 | Customer | ahmed@mail.com | estimate waiting for approval |
 | Customer | sana@mail.com | booking waiting for the advisor |
-| Other owner | omar@bayflow.test | Peshawar Quick Fix (tenant isolation check) |
+| Owner | hassan@bayflow.test | Peshawar Quick Fix (tenant isolation check) |
 
 Other shops have their own staff, for example `hina.sa@`, `faisal.tech@`, `zain.parts@bayflow.test` (Karachi) and `ayesha.sa@`, `kamran.tech@`, `rabia.qc@`, `adeel.parts@bayflow.test` (Islamabad).
 
