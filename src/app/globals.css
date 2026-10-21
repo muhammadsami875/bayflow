@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 248 250 252;
+  --surface: 255 255 255;
+  --muted: 241 245 249;
+  --line: 226 232 240;
+  --ink: 15 23 42;
+  --ink-soft: 71 85 105;
+  --brand: 37 99 235;
+  --brand-strong: 29 78 216;
+  --brand-soft: 219 234 254;
+  --accent: 4 120 87;
+  --accent-soft: 209 250 229;
+  --warn: 180 83 9;
+  --warn-soft: 254 243 199;
+  --danger: 185 28 28;
+  --danger-soft: 254 226 226;
+  --navy: 15 23 42;
+  --navy-soft: 30 41 59;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-bg font-sans text-base leading-relaxed text-ink antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-semibold tracking-tight text-ink;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand ring-offset-2 ring-offset-bg;
+  }
+  button,
+  [role="button"],
+  select,
+  summary,
+  label[for] {
+    @apply cursor-pointer;
+  }
+  button:disabled {
+    @apply cursor-not-allowed;
+  }
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+}
+
+@layer components {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-wider text-ink-soft;
+  }
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.skeleton {
+  @apply rounded-lg bg-muted;
+  animation: shimmer 1.4s ease-in-out infinite;
+}

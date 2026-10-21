@@ -1,0 +1,377 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserType {
+  CUSTOMER
+  OWNER
+  STAFF
+}
+
+enum ShopRole {
+  SERVICE_ADVISOR
+  TECHNICIAN
+  QC_INSPECTOR
+  PARTS_PERSON
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  ASSIGNED
+  INSPECTING
+  ESTIMATE_REVIEW
+  AWAITING_CUSTOMER
+  ESTIMATE_APPROVED
+  ESTIMATE_REJECTED
+  PARTS_PENDING
+  PARTS_ORDERED
+  PARTS_READY
+  IN_REPAIR
+  QC_PENDING
+  QC_IN_PROGRESS
+  READY_FOR_PICKUP
+  COMPLETED
+  CANCELLED
+}
+
+enum EstimateStatus {
+  DRAFT
+  SENT
+  APPROVED
+  REJECTED
+}
+
+enum LineKind {
+  PART
+  LABOUR
+}
+
+enum PurchaseOrderStatus {
+  ORDERED
+  PARTIALLY_RECEIVED
+  RECEIVED
+}
+
+// ---------------------------------------------------------------- identity
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  phone        String?
+  passwordHash String
+  type         UserType
+  createdAt    DateTime @default(now())
+
+  ownedShops    Shop[]
+  memberships   Membership[]
+  vehicles      Vehicle[]
+  bookings      Booking[]      @relation("CustomerBookings")
+  notifications Notification[]
+
+  @@index([type])
+}
+
+// A tenant. Every shop-owned record below carries shopId.
+model Shop {
+  id               String   @id @default(cuid())
+  ownerId          String
+  name             String
+  description      String?
+  address          String
+  city             String
+  phone            String
+  openTime         String   @default("09:00")
+  closeTime        String   @default("18:00")
+  workingDays      Int[]    @default([1, 2, 3, 4, 5, 6])
+  slotMinutes      Int      @default(60)
+  slotCapacity     Int      @default(2)
+  utcOffsetMinutes Int      @default(300)
+  logoUrl          String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+
+  owner          User            @relation(fields: [ownerId], references: [id])
+  memberships    Membership[]
+  services       Service[]
+  slots          Slot[]
+  inventory      InventoryItem[]
+  bookings       Booking[]
+  purchaseOrders PurchaseOrder[]
+
+  @@index([ownerId])
+  @@index([city])
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  shopId    String
+  userId    String
+  role      ShopRole
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, userId])
+  @@index([userId])
+}
+
+model Service {
+  id          String  @id @default(cuid())
+  shopId      String
+  name        String
+  description String?
+  durationMin Int     @default(60)
+  basePrice   Int?
+  isActive    Boolean @default(true)
+
+  shop     Shop             @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  bookings BookingService[]
+
+  @@index([shopId])
+}
+
+// ---------------------------------------------------------------- scheduling
+
+// One row per (shop, date, time) that has ever been booked. `booked` is
+// incremented with a guarded UPDATE so capacity can never be exceeded.
+model Slot {
+  id     String @id @default(cuid())
+  shopId String
+  date   String // YYYY-MM-DD in shop-local time
+  time   String // HH:mm in shop-local time
+  booked Int    @default(0)
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, date, time])
+}
+
+// ---------------------------------------------------------------- vehicles & bookings
+
+model Vehicle {
+  id         String   @id @default(cuid())
+  customerId String
+  regNo      String
+  make       String
+  model      String
+  year       Int
+  color      String?
+  mileage    Int?
+  createdAt  DateTime @default(now())
+
+  customer User      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@unique([customerId, regNo])
+}
+
+model Booking {
+  id               String        @id @default(cuid())
+  ref              String        @unique
+  shopId           String
+  customerId       String
+  vehicleId        String
+  status           BookingStatus @default(PENDING)
+  slotDate         String
+  slotTime         String
+  notes            String?
+  mileageAtBooking Int?
+  technicianId     String?
+  partsPersonId    String?
+  qcInspectorId    String?
+  readyNotifiedAt  DateTime?
+  cancelReason     String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  shop        Shop             @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer    User             @relation("CustomerBookings", fields: [customerId], references: [id])
+  vehicle     Vehicle          @relation(fields: [vehicleId], references: [id])
+  services    BookingService[]
+  estimates   Estimate[]
+  events      BookingEvent[]
+  issues      QcIssue[]
+  allocations Allocation[]
+  orders      PurchaseOrder[]
+
+  @@index([shopId, status])
+  @@index([customerId])
+  @@index([technicianId])
+}
+
+model BookingService {
+  id        String  @id @default(cuid())
+  bookingId String
+  serviceId String?
+  name      String
+
+  booking Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  service Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+
+  @@index([bookingId])
+}
+
+// Audit log: who moved a booking from where to where, and when.
+model BookingEvent {
+  id         String         @id @default(cuid())
+  bookingId  String
+  actorId    String?
+  actorName  String
+  actorRole  String
+  action     String
+  fromStatus BookingStatus?
+  toStatus   BookingStatus
+  note       String?
+  createdAt  DateTime       @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, createdAt])
+}
+
+// ---------------------------------------------------------------- estimates
+
+model Estimate {
+  id           String         @id @default(cuid())
+  bookingId    String
+  version      Int            @default(1) // new version after a rejection
+  revision     Int            @default(0) // bumped when the advisor edits before sending
+  status       EstimateStatus @default(DRAFT)
+  diagnosis    String?
+  customerNote String?
+  total        Int            @default(0)
+  createdById  String
+  sentAt       DateTime?
+  respondedAt  DateTime?
+  createdAt    DateTime       @default(now())
+
+  booking Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  lines   EstimateLine[]
+
+  @@unique([bookingId, version])
+}
+
+model EstimateLine {
+  id          String   @id @default(cuid())
+  estimateId  String
+  kind        LineKind
+  description String
+  itemId      String?
+  quantity    Int      @default(1)
+  unitCost    Int
+
+  estimate Estimate       @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  item     InventoryItem? @relation(fields: [itemId], references: [id], onDelete: SetNull)
+
+  @@index([estimateId])
+}
+
+// ---------------------------------------------------------------- QC
+
+model QcIssue {
+  id           String    @id @default(cuid())
+  bookingId    String
+  title        String
+  description  String
+  raisedById   String
+  raisedByName String
+  resolvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+}
+
+// ---------------------------------------------------------------- inventory & procurement
+
+model InventoryItem {
+  id           String @id @default(cuid())
+  shopId       String
+  sku          String
+  name         String
+  quantity     Int    @default(0)
+  reorderLevel Int    @default(0)
+  cost         Int    @default(0)
+
+  shop        Shop                @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  lines       EstimateLine[]
+  allocations Allocation[]
+  poItems     PurchaseOrderItem[]
+
+  @@unique([shopId, sku])
+  @@index([shopId])
+}
+
+model Allocation {
+  id         String    @id @default(cuid())
+  bookingId  String
+  itemId     String
+  quantity   Int
+  releasedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  booking Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  item    InventoryItem @relation(fields: [itemId], references: [id])
+
+  @@index([bookingId])
+}
+
+model PurchaseOrder {
+  id          String              @id @default(cuid())
+  shopId      String
+  bookingId   String?
+  number      String
+  status      PurchaseOrderStatus @default(ORDERED)
+  supplier    String?
+  createdById String
+  createdAt   DateTime            @default(now())
+
+  shop    Shop                @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  booking Booking?            @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  items   PurchaseOrderItem[]
+
+  @@unique([shopId, number])
+  @@index([shopId, status])
+}
+
+model PurchaseOrderItem {
+  id               String @id @default(cuid())
+  orderId          String
+  itemId           String
+  quantityOrdered  Int
+  quantityReceived Int    @default(0)
+  unitCost         Int    @default(0)
+
+  order PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  item  InventoryItem @relation(fields: [itemId], references: [id])
+
+  @@index([orderId])
+}
+
+// ---------------------------------------------------------------- notifications
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  shopId    String?
+  bookingId String?
+  title     String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
